@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -7,24 +6,24 @@ import { Building, TrendingUp, Users, MapPin, Star } from 'lucide-react';
 const CompanyInsights = () => {
   const topCompanies = [
     {
-      name: 'Microsoft Corporation',
+      name: 'Nvidia Corporation',
       visits: 45,
       engagement: 92,
-      location: 'Redmond, WA',
+      location: 'Santa Clara, CA',
       industry: 'Technology',
       priority: 'High',
-      employees: '220,000+',
-      revenue: '$211B'
+      employees: '29,000+',
+      revenue: '$61B'
     },
     {
-      name: 'Salesforce Inc',
+      name: 'Home Depot Inc',
       visits: 32,
       engagement: 88,
-      location: 'San Francisco, CA',
-      industry: 'Software',
+      location: 'Atlanta, GA',
+      industry: 'Retail',
       priority: 'High',
-      employees: '73,000+',
-      revenue: '$31B'
+      employees: '500,000+',
+      revenue: '$157B'
     },
     {
       name: 'Amazon Web Services',
