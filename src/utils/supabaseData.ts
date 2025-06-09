@@ -2,7 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface VisitorData {
-  id?: string;
   visitor_ip: string;
   domain?: string;
   date_time_utc: string;
@@ -35,7 +34,6 @@ export const fetchVisitors = async (): Promise<VisitorData[]> => {
 
   // Transform the data to ensure visitor_ip is a string
   const transformedData: VisitorData[] = (data || []).map(row => ({
-    id: row.id,
     visitor_ip: String(row.visitor_ip), // Convert unknown to string
     domain: row.domain,
     date_time_utc: row.date_time_utc,
@@ -48,32 +46,14 @@ export const fetchVisitors = async (): Promise<VisitorData[]> => {
   return transformedData;
 };
 
-// Function to fetch companies from Supabase
+// Function to fetch companies from Supabase - returns empty array since companies table doesn't exist
 export const fetchCompanies = async (): Promise<CompanyData[]> => {
-  const { data, error } = await supabase
-    .from('companies')
-    .select('*')
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching companies:', error);
-    return [];
-  }
-
-  return data || [];
+  console.log('Companies table not available in current schema');
+  return [];
 };
 
-// Function to get company name from IP address
+// Function to get company name from IP address - returns Unknown Company since companies table doesn't exist
 export const getCompanyFromIP = async (ip: string): Promise<string> => {
-  const { data, error } = await supabase
-    .from('companies')
-    .select('name, ip_addresses')
-    .contains('ip_addresses', [ip])
-    .single();
-
-  if (error || !data) {
-    return 'Unknown Company';
-  }
-
-  return data.name;
+  console.log('Company lookup not available - companies table does not exist');
+  return 'Unknown Company';
 };
