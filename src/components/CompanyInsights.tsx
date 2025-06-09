@@ -26,14 +26,14 @@ const CompanyInsights = () => {
       revenue: '$157B'
     },
     {
-      name: 'Amazon Web Services',
+      name: 'Farmers Insurance',
       visits: 28,
       engagement: 85,
-      location: 'Seattle, WA',
-      industry: 'Cloud Services',
+      location: 'Los Angeles, CA',
+      industry: 'Insurance',
       priority: 'High',
-      employees: '1,500,000+',
-      revenue: '$514B'
+      employees: '48,000+',
+      revenue: '$22B'
     },
     {
       name: 'JPMorgan Chase',
