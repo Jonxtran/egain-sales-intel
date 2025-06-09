@@ -15,8 +15,8 @@ export interface ExcelVisitorData {
 
 export const parseExcelFile = async (): Promise<ExcelVisitorData[]> => {
   try {
-    // Load the Excel file from the public directory
-    const response = await fetch('/Website visitor IP address log file 1.xlsx');
+    // Load the shortened Excel file from the public directory
+    const response = await fetch('/Shorten - Website visitor IP address log file .xlsx');
     const arrayBuffer = await response.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     
