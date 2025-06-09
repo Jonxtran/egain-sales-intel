@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
 
@@ -34,7 +33,19 @@ export const fetchVisitors = async (): Promise<VisitorData[]> => {
     return [];
   }
 
-  return data || [];
+  // Transform the data to ensure visitor_ip is a string
+  const transformedData: VisitorData[] = (data || []).map(row => ({
+    id: row.id,
+    visitor_ip: String(row.visitor_ip), // Convert unknown to string
+    domain: row.domain,
+    date_time_utc: row.date_time_utc,
+    request_type: row.request_type,
+    page_url: row.page_url,
+    referral_url: row.referral_url,
+    user_agent: row.user_agent
+  }));
+
+  return transformedData;
 };
 
 // Function to fetch companies from Supabase
