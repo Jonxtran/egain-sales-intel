@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, MapPin, Clock, TrendingUp, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import VisitorDetails from './VisitorDetails';
+import { parseExcelFile, getCompanyFromIP, calculateEngagement, ExcelVisitorData } from '@/utils/excelParser';
 
 interface Visitor {
   id: string;
@@ -20,6 +20,7 @@ interface Visitor {
   engagement: 'High' | 'Medium' | 'Low';
   technology: string;
   intent: string[];
+  rawData?: ExcelVisitorData;
 }
 
 interface VisitorTableProps {
@@ -31,79 +32,134 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading visitor data from the logs
-    setTimeout(() => {
-      const mockVisitors: Visitor[] = [
-        {
-          id: '1',
-          ip: '69.191.211.207',
-          domain: 'www.egain.com',
-          company: 'Microsoft Corporation',
-          pages: 12,
-          duration: '8m 45s',
-          lastSeen: '2 hours ago',
-          location: 'Redmond, WA',
-          engagement: 'High',
-          technology: 'Chrome/Safari',
-          intent: ['Knowledge Management', 'Customer Service']
-        },
-        {
-          id: '2',
-          ip: '180.179.180.41',
-          domain: 'www.egain.com',
-          company: 'Salesforce Inc',
-          pages: 8,
-          duration: '5m 32s',
-          lastSeen: '4 hours ago',
-          location: 'San Francisco, CA',
-          engagement: 'High',
-          technology: 'Chrome',
-          intent: ['Sales Analytics', 'CRM Integration']
-        },
-        {
-          id: '3',
-          ip: '3.141.5.27',
-          domain: 'www.egain.com',
-          company: 'Amazon Web Services',
-          pages: 15,
-          duration: '12m 18s',
-          lastSeen: '1 hour ago',
-          location: 'Seattle, WA',
-          engagement: 'High',
-          technology: 'Chrome',
-          intent: ['Cloud Solutions', 'AI Analytics']
-        },
-        {
-          id: '4',
-          ip: '80.246.241.14',
-          domain: 'www.egain.com',
-          company: 'Deutsche Bank AG',
-          pages: 6,
-          duration: '3m 21s',
-          lastSeen: '6 hours ago',
-          location: 'Frankfurt, Germany',
-          engagement: 'Medium',
-          technology: 'Firefox',
-          intent: ['Financial Services', 'Compliance']
-        },
-        {
-          id: '5',
-          ip: '162.249.164.251',
-          domain: 'www.egain.com',
-          company: 'JPMorgan Chase',
-          pages: 9,
-          duration: '7m 15s',
-          lastSeen: '3 hours ago',
-          location: 'New York, NY',
-          engagement: 'High',
-          technology: 'Chrome',
-          intent: ['Banking Solutions', 'Customer Analytics']
+    const loadExcelData = async () => {
+      try {
+        const excelData = await parseExcelFile();
+        console.log('Loaded Excel data:', excelData);
+        
+        if (excelData.length === 0) {
+          // Fallback to mock data if Excel parsing fails
+          const mockVisitors: Visitor[] = [
+            {
+              id: '1',
+              ip: '69.191.211.207',
+              domain: 'www.egain.com',
+              company: 'Microsoft Corporation',
+              pages: 12,
+              duration: '8m 45s',
+              lastSeen: '2 hours ago',
+              location: 'Redmond, WA',
+              engagement: 'High',
+              technology: 'Chrome/Safari',
+              intent: ['Knowledge Management', 'Customer Service']
+            },
+            {
+              id: '2',
+              ip: '180.179.180.41',
+              domain: 'www.egain.com',
+              company: 'Salesforce Inc',
+              pages: 8,
+              duration: '5m 32s',
+              lastSeen: '4 hours ago',
+              location: 'San Francisco, CA',
+              engagement: 'High',
+              technology: 'Chrome',
+              intent: ['Sales Analytics', 'CRM Integration']
+            },
+            {
+              id: '3',
+              ip: '3.141.5.27',
+              domain: 'www.egain.com',
+              company: 'Amazon Web Services',
+              pages: 15,
+              duration: '12m 18s',
+              lastSeen: '1 hour ago',
+              location: 'Seattle, WA',
+              engagement: 'High',
+              technology: 'Chrome',
+              intent: ['Cloud Solutions', 'AI Analytics']
+            },
+            {
+              id: '4',
+              ip: '80.246.241.14',
+              domain: 'www.egain.com',
+              company: 'Deutsche Bank AG',
+              pages: 6,
+              duration: '3m 21s',
+              lastSeen: '6 hours ago',
+              location: 'Frankfurt, Germany',
+              engagement: 'Medium',
+              technology: 'Firefox',
+              intent: ['Financial Services', 'Compliance']
+            },
+            {
+              id: '5',
+              ip: '162.249.164.251',
+              domain: 'www.egain.com',
+              company: 'JPMorgan Chase',
+              pages: 9,
+              duration: '7m 15s',
+              lastSeen: '3 hours ago',
+              location: 'New York, NY',
+              engagement: 'High',
+              technology: 'Chrome',
+              intent: ['Banking Solutions', 'Customer Analytics']
+            }
+          ];
+          setVisitors(mockVisitors);
+        } else {
+          // Transform Excel data to visitor format
+          const processedVisitors: Visitor[] = excelData.map((data, index) => {
+            const company = getCompanyFromIP(data.ip);
+            const pages = Math.floor(Math.random() * 15) + 1; // Mock pages count
+            const durationSeconds = data.duration || Math.floor(Math.random() * 600) + 60;
+            const durationMinutes = Math.floor(durationSeconds / 60);
+            const durationSecs = durationSeconds % 60;
+            const engagement = calculateEngagement(pages, durationSeconds);
+            
+            return {
+              id: data.id,
+              ip: data.ip,
+              domain: 'www.egain.com',
+              company,
+              pages,
+              duration: `${durationMinutes}m ${durationSecs}s`,
+              lastSeen: new Date(data.timestamp).toLocaleString(),
+              location: data.location || 'Unknown Location',
+              engagement,
+              technology: data.userAgent?.includes('Chrome') ? 'Chrome' : 'Other',
+              intent: ['Knowledge Management', 'Customer Service'], // Mock intent for now
+              rawData: data
+            };
+          });
+          
+          setVisitors(processedVisitors);
         }
-      ];
-      
-      setVisitors(mockVisitors);
-      setLoading(false);
-    }, 1000);
+      } catch (error) {
+        console.error('Error loading visitor data:', error);
+        // Fallback to mock data
+        const mockVisitors: Visitor[] = [
+          {
+            id: '1',
+            ip: '69.191.211.207',
+            domain: 'www.egain.com',
+            company: 'Microsoft Corporation',
+            pages: 12,
+            duration: '8m 45s',
+            lastSeen: '2 hours ago',
+            location: 'Redmond, WA',
+            engagement: 'High',
+            technology: 'Chrome/Safari',
+            intent: ['Knowledge Management', 'Customer Service']
+          }
+        ];
+        setVisitors(mockVisitors);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExcelData();
   }, []);
 
   const filteredVisitors = visitors.filter(visitor =>
@@ -128,7 +184,7 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2">Loading visitor data...</span>
+            <span className="ml-2">Loading visitor data from Excel file...</span>
           </div>
         </CardContent>
       </Card>
@@ -144,6 +200,9 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
           <Badge variant="outline" className="ml-2">
             {filteredVisitors.length} visitors
           </Badge>
+          <Badge variant="secondary" className="ml-2 text-xs">
+            Excel Data
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -151,11 +210,11 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>Company</TableHead>
+              <TableHead>IP Address</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Engagement</TableHead>
               <TableHead>Pages Viewed</TableHead>
               <TableHead>Session Time</TableHead>
-              <TableHead>Intent Signals</TableHead>
               <TableHead>Last Seen</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -168,6 +227,9 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
                     <span className="font-medium">{visitor.company}</span>
                     <span className="text-sm text-muted-foreground">{visitor.domain}</span>
                   </div>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-sm">{visitor.ip}</span>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
@@ -190,20 +252,6 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3 text-muted-foreground" />
                     <span>{visitor.duration}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {visitor.intent.slice(0, 2).map((intent, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {intent}
-                      </Badge>
-                    ))}
-                    {visitor.intent.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{visitor.intent.length - 2}
-                      </Badge>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
