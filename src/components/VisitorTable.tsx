@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, MapPin, Clock, TrendingUp, ExternalLink, Upload, RefreshCw } from 'lucide-react';
+import { Eye, MapPin, Clock, TrendingUp, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import VisitorDetails from './VisitorDetails';
-import { fetchVisitors, getCompanyFromIP, importExcelToSupabase, VisitorData } from '@/utils/supabaseData';
+import { fetchVisitors, getCompanyFromIP, VisitorData } from '@/utils/supabaseData';
 import { calculateEngagement } from '@/utils/excelParser';
 import { useToast } from '@/hooks/use-toast';
 
@@ -33,7 +33,6 @@ interface VisitorTableProps {
 const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [importing, setImporting] = useState(false);
   const { toast } = useToast();
 
   const loadVisitors = async () => {
@@ -43,36 +42,13 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
       console.log('Loaded Supabase data:', supabaseData);
       
       if (supabaseData.length === 0) {
-        // Show mock data if no data in Supabase yet
-        const mockVisitors: Visitor[] = [
-          {
-            id: '1',
-            ip: '69.191.211.207',
-            domain: 'www.egain.com',
-            company: 'Microsoft Corporation',
-            pages: 12,
-            duration: '8m 45s',
-            lastSeen: '2 hours ago',
-            location: 'Redmond, WA',
-            engagement: 'High',
-            technology: 'Chrome/Safari',
-            intent: ['Knowledge Management', 'Customer Service']
-          },
-          {
-            id: '2',
-            ip: '180.179.180.41',
-            domain: 'www.egain.com',
-            company: 'Salesforce Inc',
-            pages: 8,
-            duration: '5m 32s',
-            lastSeen: '4 hours ago',
-            location: 'San Francisco, CA',
-            engagement: 'High',
-            technology: 'Chrome',
-            intent: ['Sales Analytics', 'CRM Integration']
-          }
-        ];
-        setVisitors(mockVisitors);
+        // Show empty state if no data in Supabase
+        setVisitors([]);
+        toast({
+          title: "No Data",
+          description: "No visitor data found in the database",
+          variant: "default"
+        });
       } else {
         // Transform Supabase data to visitor format
         const processedVisitors: Visitor[] = await Promise.all(
@@ -112,37 +88,6 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleImportExcel = async () => {
-    setImporting(true);
-    try {
-      const result = await importExcelToSupabase();
-      
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message,
-        });
-        // Reload data after successful import
-        await loadVisitors();
-      } else {
-        toast({
-          title: "Import Failed",
-          description: result.message,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to import Excel data",
-        variant: "destructive"
-      });
-    } finally {
-      setImporting(false);
     }
   };
 
@@ -203,90 +148,87 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleImportExcel}
-              disabled={importing}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {importing ? 'Importing...' : 'Import Excel'}
-            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Company</TableHead>
-              <TableHead>IP Address</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Engagement</TableHead>
-              <TableHead>Pages Viewed</TableHead>
-              <TableHead>Session Time</TableHead>
-              <TableHead>Last Seen</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredVisitors.map((visitor) => (
-              <TableRow key={visitor.id} className="hover:bg-muted/50">
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{visitor.company}</span>
-                    <span className="text-sm text-muted-foreground">{visitor.domain}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono text-sm">{visitor.ip}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-sm">{visitor.location}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getEngagementColor(visitor.engagement)}>
-                    {visitor.engagement}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                    <span>{visitor.pages}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span>{visitor.duration}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {visitor.lastSeen}
-                </TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-3 h-3 mr-1" />
-                        View Details
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>Visitor Intelligence - {visitor.company}</DialogTitle>
-                      </DialogHeader>
-                      <VisitorDetails visitor={visitor} />
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
+        {visitors.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No visitor data found in the database.</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Company</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Engagement</TableHead>
+                <TableHead>Pages Viewed</TableHead>
+                <TableHead>Session Time</TableHead>
+                <TableHead>Last Seen</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredVisitors.map((visitor) => (
+                <TableRow key={visitor.id} className="hover:bg-muted/50">
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{visitor.company}</span>
+                      <span className="text-sm text-muted-foreground">{visitor.domain}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-sm">{visitor.ip}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-sm">{visitor.location}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={getEngagementColor(visitor.engagement)}>
+                      {visitor.engagement}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3 text-muted-foreground" />
+                      <span>{visitor.pages}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      <span>{visitor.duration}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {visitor.lastSeen}
+                  </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-3 h-3 mr-1" />
+                          View Details
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                          <DialogTitle>Visitor Intelligence - {visitor.company}</DialogTitle>
+                        </DialogHeader>
+                        <VisitorDetails visitor={visitor} />
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );
