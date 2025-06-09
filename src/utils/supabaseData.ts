@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
 
@@ -82,7 +83,7 @@ export const getCompanyFromIP = async (ip: string): Promise<string> => {
 export const importExcelToSupabase = async (): Promise<{ success: boolean; message: string }> => {
   try {
     // Load the Excel file
-    const response = await fetch('/Shorten - Website visitor IP address log file .xlsx');
+    const response = await fetch('/Website visitor IP address log file 1.xlsx');
     const arrayBuffer = await response.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     
