@@ -1,12 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, MapPin, Clock, TrendingUp, ExternalLink } from 'lucide-react';
+import { Eye, MapPin, Clock, TrendingUp, ExternalLink, Upload, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import VisitorDetails from './VisitorDetails';
-import { parseExcelFile, getCompanyFromIP, calculateEngagement, ExcelVisitorData } from '@/utils/excelParser';
+import { fetchVisitors, getCompanyFromIP, importExcelToSupabase, VisitorData } from '@/utils/supabaseData';
+import { calculateEngagement } from '@/utils/excelParser';
+import { useToast } from '@/hooks/use-toast';
 
 interface Visitor {
   id: string;
@@ -20,7 +23,7 @@ interface Visitor {
   engagement: 'High' | 'Medium' | 'Low';
   technology: string;
   intent: string[];
-  rawData?: ExcelVisitorData;
+  rawData?: VisitorData;
 }
 
 interface VisitorTableProps {
@@ -30,114 +33,17 @@ interface VisitorTableProps {
 const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const loadExcelData = async () => {
-      try {
-        const excelData = await parseExcelFile();
-        console.log('Loaded Excel data:', excelData);
-        
-        if (excelData.length === 0) {
-          // Fallback to mock data if Excel parsing fails
-          const mockVisitors: Visitor[] = [
-            {
-              id: '1',
-              ip: '69.191.211.207',
-              domain: 'www.egain.com',
-              company: 'Microsoft Corporation',
-              pages: 12,
-              duration: '8m 45s',
-              lastSeen: '2 hours ago',
-              location: 'Redmond, WA',
-              engagement: 'High',
-              technology: 'Chrome/Safari',
-              intent: ['Knowledge Management', 'Customer Service']
-            },
-            {
-              id: '2',
-              ip: '180.179.180.41',
-              domain: 'www.egain.com',
-              company: 'Salesforce Inc',
-              pages: 8,
-              duration: '5m 32s',
-              lastSeen: '4 hours ago',
-              location: 'San Francisco, CA',
-              engagement: 'High',
-              technology: 'Chrome',
-              intent: ['Sales Analytics', 'CRM Integration']
-            },
-            {
-              id: '3',
-              ip: '3.141.5.27',
-              domain: 'www.egain.com',
-              company: 'Amazon Web Services',
-              pages: 15,
-              duration: '12m 18s',
-              lastSeen: '1 hour ago',
-              location: 'Seattle, WA',
-              engagement: 'High',
-              technology: 'Chrome',
-              intent: ['Cloud Solutions', 'AI Analytics']
-            },
-            {
-              id: '4',
-              ip: '80.246.241.14',
-              domain: 'www.egain.com',
-              company: 'Deutsche Bank AG',
-              pages: 6,
-              duration: '3m 21s',
-              lastSeen: '6 hours ago',
-              location: 'Frankfurt, Germany',
-              engagement: 'Medium',
-              technology: 'Firefox',
-              intent: ['Financial Services', 'Compliance']
-            },
-            {
-              id: '5',
-              ip: '162.249.164.251',
-              domain: 'www.egain.com',
-              company: 'JPMorgan Chase',
-              pages: 9,
-              duration: '7m 15s',
-              lastSeen: '3 hours ago',
-              location: 'New York, NY',
-              engagement: 'High',
-              technology: 'Chrome',
-              intent: ['Banking Solutions', 'Customer Analytics']
-            }
-          ];
-          setVisitors(mockVisitors);
-        } else {
-          // Transform Excel data to visitor format
-          const processedVisitors: Visitor[] = excelData.map((data, index) => {
-            const company = getCompanyFromIP(data.ip);
-            const pages = Math.floor(Math.random() * 15) + 1; // Mock pages count
-            const durationSeconds = data.duration || Math.floor(Math.random() * 600) + 60;
-            const durationMinutes = Math.floor(durationSeconds / 60);
-            const durationSecs = durationSeconds % 60;
-            const engagement = calculateEngagement(pages, durationSeconds);
-            
-            return {
-              id: data.id,
-              ip: data.ip,
-              domain: 'www.egain.com',
-              company,
-              pages,
-              duration: `${durationMinutes}m ${durationSecs}s`,
-              lastSeen: new Date(data.timestamp).toLocaleString(),
-              location: data.location || 'Unknown Location',
-              engagement,
-              technology: data.userAgent?.includes('Chrome') ? 'Chrome' : 'Other',
-              intent: ['Knowledge Management', 'Customer Service'], // Mock intent for now
-              rawData: data
-            };
-          });
-          
-          setVisitors(processedVisitors);
-        }
-      } catch (error) {
-        console.error('Error loading visitor data:', error);
-        // Fallback to mock data
+  const loadVisitors = async () => {
+    setLoading(true);
+    try {
+      const supabaseData = await fetchVisitors();
+      console.log('Loaded Supabase data:', supabaseData);
+      
+      if (supabaseData.length === 0) {
+        // Show mock data if no data in Supabase yet
         const mockVisitors: Visitor[] = [
           {
             id: '1',
@@ -151,15 +57,97 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
             engagement: 'High',
             technology: 'Chrome/Safari',
             intent: ['Knowledge Management', 'Customer Service']
+          },
+          {
+            id: '2',
+            ip: '180.179.180.41',
+            domain: 'www.egain.com',
+            company: 'Salesforce Inc',
+            pages: 8,
+            duration: '5m 32s',
+            lastSeen: '4 hours ago',
+            location: 'San Francisco, CA',
+            engagement: 'High',
+            technology: 'Chrome',
+            intent: ['Sales Analytics', 'CRM Integration']
           }
         ];
         setVisitors(mockVisitors);
-      } finally {
-        setLoading(false);
+      } else {
+        // Transform Supabase data to visitor format
+        const processedVisitors: Visitor[] = await Promise.all(
+          supabaseData.map(async (data) => {
+            const company = await getCompanyFromIP(data.visitor_ip);
+            const pages = Math.floor(Math.random() * 15) + 1;
+            const durationSeconds = Math.floor(Math.random() * 600) + 60;
+            const durationMinutes = Math.floor(durationSeconds / 60);
+            const durationSecs = durationSeconds % 60;
+            const engagement = calculateEngagement(pages, durationSeconds);
+            
+            return {
+              id: data.id || '',
+              ip: data.visitor_ip,
+              domain: data.domain || 'www.egain.com',
+              company,
+              pages,
+              duration: `${durationMinutes}m ${durationSecs}s`,
+              lastSeen: new Date(data.date_time_utc).toLocaleString(),
+              location: 'Unknown Location',
+              engagement,
+              technology: data.user_agent?.includes('Chrome') ? 'Chrome' : 'Other',
+              intent: ['Knowledge Management', 'Customer Service'],
+              rawData: data
+            };
+          })
+        );
+        
+        setVisitors(processedVisitors);
       }
-    };
+    } catch (error) {
+      console.error('Error loading visitor data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load visitor data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadExcelData();
+  const handleImportExcel = async () => {
+    setImporting(true);
+    try {
+      const result = await importExcelToSupabase();
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        // Reload data after successful import
+        await loadVisitors();
+      } else {
+        toast({
+          title: "Import Failed",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to import Excel data",
+        variant: "destructive"
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  useEffect(() => {
+    loadVisitors();
   }, []);
 
   const filteredVisitors = visitors.filter(visitor =>
@@ -184,7 +172,7 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
         <CardContent className="p-8">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2">Loading visitor data from Excel file...</span>
+            <span className="ml-2">Loading visitor data...</span>
           </div>
         </CardContent>
       </Card>
@@ -194,16 +182,38 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Eye className="w-5 h-5" />
-          Visitor Intelligence
-          <Badge variant="outline" className="ml-2">
-            {filteredVisitors.length} visitors
-          </Badge>
-          <Badge variant="secondary" className="ml-2 text-xs">
-            Excel Data
-          </Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            Visitor Intelligence
+            <Badge variant="outline" className="ml-2">
+              {filteredVisitors.length} visitors
+            </Badge>
+            <Badge variant="secondary" className="ml-2 text-xs">
+              Supabase Data
+            </Badge>
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadVisitors}
+              disabled={loading}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleImportExcel}
+              disabled={importing}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {importing ? 'Importing...' : 'Import Excel'}
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
