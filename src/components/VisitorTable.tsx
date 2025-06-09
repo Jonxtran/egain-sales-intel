@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -144,9 +143,6 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
             Visitor Intelligence
             <Badge variant="outline" className="ml-2">
               {filteredVisitors.length} visitors
-            </Badge>
-            <Badge variant="secondary" className="ml-2 text-xs">
-              Supabase Data
             </Badge>
           </CardTitle>
           <div className="flex gap-2">
