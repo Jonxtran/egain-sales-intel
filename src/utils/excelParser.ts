@@ -27,19 +27,81 @@ export const parseExcelFile = async (): Promise<ExcelVisitorData[]> => {
     // Convert to JSON
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
     
-    // Transform the data to match our interface
-    const visitors: ExcelVisitorData[] = jsonData.map((row: any, index: number) => ({
-      id: String(index + 1),
-      ip: row['IP Address'] || row['IP'] || row['ip'] || '',
-      timestamp: row['Timestamp'] || row['Time'] || row['timestamp'] || '',
-      page: row['Page'] || row['URL'] || row['page'] || '',
-      referrer: row['Referrer'] || row['referrer'] || '',
-      userAgent: row['User Agent'] || row['userAgent'] || '',
-      sessionId: row['Session ID'] || row['sessionId'] || '',
-      duration: row['Duration'] || row['duration'] || 0,
-      location: row['Location'] || row['location'] || ''
-    }));
+    console.log('Raw Excel data:', jsonData);
+    console.log('First row keys:', jsonData[0] ? Object.keys(jsonData[0]) : 'No data');
     
+    // Transform the data to match our interface with more flexible column matching
+    const visitors: ExcelVisitorData[] = jsonData.map((row: any, index: number) => {
+      const keys = Object.keys(row);
+      console.log(`Row ${index + 1} keys:`, keys);
+      
+      // Find IP column with various possible names
+      const ipKey = keys.find(key => 
+        key.toLowerCase().includes('ip') || 
+        key.toLowerCase().includes('address')
+      );
+      
+      // Find timestamp column
+      const timestampKey = keys.find(key => 
+        key.toLowerCase().includes('time') || 
+        key.toLowerCase().includes('date') ||
+        key.toLowerCase().includes('stamp')
+      );
+      
+      // Find page/URL column
+      const pageKey = keys.find(key => 
+        key.toLowerCase().includes('page') || 
+        key.toLowerCase().includes('url') ||
+        key.toLowerCase().includes('path')
+      );
+      
+      // Find referrer column
+      const referrerKey = keys.find(key => 
+        key.toLowerCase().includes('referrer') || 
+        key.toLowerCase().includes('referer')
+      );
+      
+      // Find user agent column
+      const userAgentKey = keys.find(key => 
+        key.toLowerCase().includes('agent') || 
+        key.toLowerCase().includes('browser')
+      );
+      
+      // Find session column
+      const sessionKey = keys.find(key => 
+        key.toLowerCase().includes('session')
+      );
+      
+      // Find duration column
+      const durationKey = keys.find(key => 
+        key.toLowerCase().includes('duration') || 
+        key.toLowerCase().includes('time') && !key.toLowerCase().includes('stamp')
+      );
+      
+      // Find location column
+      const locationKey = keys.find(key => 
+        key.toLowerCase().includes('location') || 
+        key.toLowerCase().includes('country') ||
+        key.toLowerCase().includes('city')
+      );
+      
+      const visitor = {
+        id: String(index + 1),
+        ip: ipKey ? String(row[ipKey] || '') : '',
+        timestamp: timestampKey ? String(row[timestampKey] || '') : '',
+        page: pageKey ? String(row[pageKey] || '') : '',
+        referrer: referrerKey ? String(row[referrerKey] || '') : '',
+        userAgent: userAgentKey ? String(row[userAgentKey] || '') : '',
+        sessionId: sessionKey ? String(row[sessionKey] || '') : '',
+        duration: durationKey ? Number(row[durationKey]) || 0 : 0,
+        location: locationKey ? String(row[locationKey] || '') : ''
+      };
+      
+      console.log(`Processed visitor ${index + 1}:`, visitor);
+      return visitor;
+    });
+    
+    console.log('Final processed visitors:', visitors);
     return visitors;
   } catch (error) {
     console.error('Error parsing Excel file:', error);
