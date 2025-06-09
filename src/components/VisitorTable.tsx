@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, MapPin, Clock, TrendingUp, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import VisitorDetails from './VisitorDetails';
-import { fetchVisitors, getCompanyFromIP, VisitorData } from '@/utils/supabaseData';
+import { fetchVisitors, VisitorData } from '@/utils/supabaseData';
 import { calculateEngagement } from '@/utils/excelParser';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,31 +51,42 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
         });
       } else {
         // Transform Supabase data to visitor format
-        const processedVisitors: Visitor[] = await Promise.all(
-          supabaseData.map(async (data, index) => {
-            const company = await getCompanyFromIP(data.visitor_ip);
-            const pages = Math.floor(Math.random() * 15) + 1;
-            const durationSeconds = Math.floor(Math.random() * 600) + 60;
-            const durationMinutes = Math.floor(durationSeconds / 60);
-            const durationSecs = durationSeconds % 60;
-            const engagement = calculateEngagement(pages, durationSeconds);
-            
-            return {
-              id: `visitor-${data.visitor_ip}-${data.date_time_utc}-${index}`, // Generate unique ID
-              ip: data.visitor_ip,
-              domain: data.domain || 'www.egain.com',
-              company,
-              pages,
-              duration: `${durationMinutes}m ${durationSecs}s`,
-              lastSeen: new Date(data.date_time_utc).toLocaleString(),
-              location: 'Unknown Location',
-              engagement,
-              technology: data.user_agent?.includes('Chrome') ? 'Chrome' : 'Other',
-              intent: ['Knowledge Management', 'Customer Service'],
-              rawData: data
-            };
-          })
-        );
+        const processedVisitors: Visitor[] = supabaseData.map((data, index) => {
+          const domain = data.domain || 'www.egain.com';
+          // Extract company name from domain (e.g., www.egain.com -> eGain)
+          const getCompanyFromDomain = (domain: string): string => {
+            if (domain.includes('egain')) return 'eGain';
+            if (domain.includes('microsoft')) return 'Microsoft';
+            if (domain.includes('google')) return 'Google';
+            if (domain.includes('apple')) return 'Apple';
+            if (domain.includes('amazon')) return 'Amazon';
+            // Default to capitalizing the main part of the domain
+            const mainPart = domain.replace(/^www\./, '').split('.')[0];
+            return mainPart.charAt(0).toUpperCase() + mainPart.slice(1);
+          };
+          
+          const company = getCompanyFromDomain(domain);
+          const pages = Math.floor(Math.random() * 15) + 1;
+          const durationSeconds = Math.floor(Math.random() * 600) + 60;
+          const durationMinutes = Math.floor(durationSeconds / 60);
+          const durationSecs = durationSeconds % 60;
+          const engagement = calculateEngagement(pages, durationSeconds);
+          
+          return {
+            id: `visitor-${data.visitor_ip}-${data.date_time_utc}-${index}`,
+            ip: data.visitor_ip,
+            domain,
+            company,
+            pages,
+            duration: `${durationMinutes}m ${durationSecs}s`,
+            lastSeen: new Date(data.date_time_utc).toLocaleString(),
+            location: 'Unknown Location',
+            engagement,
+            technology: data.user_agent?.includes('Chrome') ? 'Chrome' : 'Other',
+            intent: ['Knowledge Management', 'Customer Service'],
+            rawData: data
+          };
+        });
         
         setVisitors(processedVisitors);
       }
@@ -159,7 +171,7 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Company</TableHead>
+                <TableHead>Domain</TableHead>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Engagement</TableHead>
