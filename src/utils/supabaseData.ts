@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import * as XLSX from 'xlsx';
 
@@ -79,7 +78,7 @@ export const getCompanyFromIP = async (ip: string): Promise<string> => {
   return data.name;
 };
 
-// Function to import Excel data to Supabase
+// Function to import Excel data to Supabase with batch processing
 export const importExcelToSupabase = async (): Promise<{ success: boolean; message: string }> => {
   try {
     // Load the Excel file
@@ -91,7 +90,7 @@ export const importExcelToSupabase = async (): Promise<{ success: boolean; messa
     const worksheet = workbook.Sheets[worksheetName];
     const jsonData = XLSX.utils.sheet_to_json(worksheet);
     
-    console.log('Raw Excel data:', jsonData);
+    console.log('Raw Excel data:', jsonData.length, 'rows');
 
     // Transform Excel data to match database structure
     const visitors: Omit<VisitorData, 'id'>[] = jsonData.map((row: any) => {
@@ -137,26 +136,46 @@ export const importExcelToSupabase = async (): Promise<{ success: boolean; messa
       };
     }).filter(visitor => visitor.visitor_ip); // Only include rows with valid IP
 
-    console.log('Processed visitors for import:', visitors);
+    console.log('Processed visitors for import:', visitors.length);
 
     if (visitors.length === 0) {
       return { success: false, message: 'No valid visitor data found in Excel file' };
     }
 
-    // Insert data into Supabase
-    const { data, error } = await supabase
-      .from('visitors')
-      .insert(visitors)
-      .select();
+    // Batch processing - process in chunks of 100
+    const batchSize = 100;
+    const totalBatches = Math.ceil(visitors.length / batchSize);
+    let totalInserted = 0;
 
-    if (error) {
-      console.error('Error inserting data:', error);
-      return { success: false, message: `Error importing data: ${error.message}` };
+    console.log(`Processing ${visitors.length} records in ${totalBatches} batches of ${batchSize}`);
+
+    for (let i = 0; i < totalBatches; i++) {
+      const start = i * batchSize;
+      const end = Math.min((i + 1) * batchSize, visitors.length);
+      const batch = visitors.slice(start, end);
+
+      console.log(`Processing batch ${i + 1}/${totalBatches} (${batch.length} records)`);
+
+      const { data, error } = await supabase
+        .from('visitors')
+        .insert(batch)
+        .select();
+
+      if (error) {
+        console.error(`Error inserting batch ${i + 1}:`, error);
+        return { 
+          success: false, 
+          message: `Error importing batch ${i + 1}: ${error.message}. ${totalInserted} records were imported before the error.` 
+        };
+      }
+
+      totalInserted += data?.length || 0;
+      console.log(`Batch ${i + 1} completed. Total inserted so far: ${totalInserted}`);
     }
 
     return { 
       success: true, 
-      message: `Successfully imported ${data?.length || 0} visitor records` 
+      message: `Successfully imported ${totalInserted} visitor records in ${totalBatches} batches` 
     };
 
   } catch (error) {
