@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -52,7 +51,7 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
       } else {
         // Transform Supabase data to visitor format
         const processedVisitors: Visitor[] = await Promise.all(
-          supabaseData.map(async (data) => {
+          supabaseData.map(async (data, index) => {
             const company = await getCompanyFromIP(data.visitor_ip);
             const pages = Math.floor(Math.random() * 15) + 1;
             const durationSeconds = Math.floor(Math.random() * 600) + 60;
@@ -61,7 +60,7 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
             const engagement = calculateEngagement(pages, durationSeconds);
             
             return {
-              id: data.id || '',
+              id: `visitor-${data.visitor_ip}-${data.date_time_utc}-${index}`, // Generate unique ID
               ip: data.visitor_ip,
               domain: data.domain || 'www.egain.com',
               company,
