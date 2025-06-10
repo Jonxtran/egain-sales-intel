@@ -124,22 +124,20 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 min-w-fit">
-              <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger value="visitors" className="text-xs sm:text-sm">
-                Visitors
-              </TabsTrigger>
-              <TabsTrigger value="heatmap" className="text-xs sm:text-sm">
-                Heatmap
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="text-xs sm:text-sm">
-                Analytics
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-background">
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="visitors" className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-background">
+              Visitors
+            </TabsTrigger>
+            <TabsTrigger value="heatmap" className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-background">
+              Heatmap
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-background">
+              Analytics
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
