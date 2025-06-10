@@ -1,8 +1,7 @@
+
 import { useState, useEffect } from 'react';
-import { Search, Filter, TrendingUp, Users, Eye, Clock, Building2, Globe } from 'lucide-react';
+import { TrendingUp, Users, Eye, Clock, Building2, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VisitorTable from '@/components/VisitorTable';
 import CompanyInsights from '@/components/CompanyInsights';
@@ -12,6 +11,7 @@ import TopCompanies from '@/components/TopCompanies';
 import RecentVisitors from '@/components/RecentVisitors';
 import HotLeads from '@/components/HotLeads';
 import PageHeatmap from '@/components/PageHeatmap';
+import IntelligentSearch from '@/components/IntelligentSearch';
 import { Badge } from '@/components/ui/badge';
 
 const Index = () => {
@@ -102,19 +102,11 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search by company, IP, page type, or visitor behavior..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
-          <SearchFilters />
-        </div>
+        {/* Intelligent Search Bar */}
+        <IntelligentSearch 
+          searchTerm={searchTerm}
+          onSearch={setSearchTerm}
+        />
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
