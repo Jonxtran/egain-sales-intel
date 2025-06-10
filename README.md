@@ -192,4 +192,4 @@ This project demonstrates modern React development practices and would benefit f
 
 ---
 
-**Built with ❤️ for sales teams who need to turn website traffic into revenue opportunities.**
+
