@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -82,9 +81,9 @@ const EngagementMetrics = () => {
           <Card key={idx}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{item.metric}</p>
-                  <p className="text-2xl font-bold">{item.value}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">{item.metric}</p>
+                  <p className="text-xl font-bold">{item.value}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <TrendingUp className={`w-3 h-3 ${item.trend === 'up' ? 'text-green-600' : 'text-red-600'}`} />
                     <span className={`text-xs ${item.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
@@ -92,7 +91,7 @@ const EngagementMetrics = () => {
                     </span>
                   </div>
                 </div>
-                <Activity className="w-8 h-8 text-muted-foreground" />
+                <Activity className="w-6 h-6 text-muted-foreground flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -103,21 +102,25 @@ const EngagementMetrics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Eye className="w-5 h-5" />
               Top Performing Pages
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {topPages.map((page, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium truncate">{page.page}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span className="text-xs text-muted-foreground">{page.visits} visits</span>
-                      <Progress value={page.engagement} className="w-20 h-1" />
-                      <span className="text-xs">{page.engagement}%</span>
+                <div key={idx} className="p-3 bg-muted/50 rounded-lg">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium break-words line-clamp-2">{page.page}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{page.visits} visits</span>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Progress value={page.engagement} className="flex-1 h-1" />
+                          <span className="text-xs whitespace-nowrap">{page.engagement}%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -129,7 +132,7 @@ const EngagementMetrics = () => {
         {/* Behavioral Patterns */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Target className="w-5 h-5" />
               Behavioral Patterns
             </CardTitle>
@@ -138,12 +141,12 @@ const EngagementMetrics = () => {
             <div className="space-y-4">
               {behaviorPatterns.map((pattern, idx) => (
                 <div key={idx} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{pattern.pattern}</span>
-                    <span className="text-sm">{pattern.percentage}%</span>
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="text-sm font-medium break-words flex-1">{pattern.pattern}</span>
+                    <span className="text-sm whitespace-nowrap">{pattern.percentage}%</span>
                   </div>
                   <Progress value={pattern.percentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground">{pattern.description}</p>
+                  <p className="text-xs text-muted-foreground break-words">{pattern.description}</p>
                 </div>
               ))}
             </div>
@@ -154,7 +157,7 @@ const EngagementMetrics = () => {
       {/* Time-based Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Calendar className="w-5 h-5" />
             Peak Engagement Times
           </CardTitle>
@@ -165,9 +168,9 @@ const EngagementMetrics = () => {
               <div key={idx} className="p-4 border rounded-lg text-center">
                 <div className="flex items-center justify-center gap-1 mb-2">
                   <Clock className="w-4 h-4" />
-                  <span className="text-sm font-medium">{time.timeSlot}</span>
+                  <span className="text-xs font-medium break-words">{time.timeSlot}</span>
                 </div>
-                <div className="text-2xl font-bold mb-1">{time.visits}%</div>
+                <div className="text-xl font-bold mb-1">{time.visits}%</div>
                 <Badge 
                   variant="outline" 
                   className={`text-xs ${

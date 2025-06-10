@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -191,7 +192,7 @@ const CompanyInsights = () => {
       {/* Top Companies Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Star className="w-5 h-5" />
             High-Priority Companies
           </CardTitle>
@@ -199,43 +200,45 @@ const CompanyInsights = () => {
         <CardContent>
           <div className="space-y-4">
             {topCompanies.map((company, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h4 className="font-semibold">{company.name}</h4>
-                      <div className="flex items-center gap-4 mt-1">
+              <div key={idx} className="p-4 border rounded-lg hover:bg-muted/50">
+                <div className="space-y-3">
+                  {/* Company Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold break-words">{company.name}</h4>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {company.location}
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <span className="break-words">{company.location}</span>
                         </span>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs whitespace-nowrap">
                           {company.industry}
                         </Badge>
-                        <Badge variant="outline" className={getPriorityColor(company.priority)}>
+                        <Badge variant="outline" className={`text-xs whitespace-nowrap ${getPriorityColor(company.priority)}`}>
                           {company.priority} Priority
                         </Badge>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div>
-                    <div className="text-sm font-medium">{company.visits}</div>
-                    <div className="text-xs text-muted-foreground">Visits</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">{company.engagement}%</div>
-                    <div className="text-xs text-muted-foreground">Engagement</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">{company.employees}</div>
-                    <div className="text-xs text-muted-foreground">Employees</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">{company.revenue}</div>
-                    <div className="text-xs text-muted-foreground">Revenue</div>
+                  
+                  {/* Company Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                    <div className="p-2 bg-muted/30 rounded">
+                      <div className="text-sm font-medium">{company.visits}</div>
+                      <div className="text-xs text-muted-foreground">Visits</div>
+                    </div>
+                    <div className="p-2 bg-muted/30 rounded">
+                      <div className="text-sm font-medium">{company.engagement}%</div>
+                      <div className="text-xs text-muted-foreground">Engagement</div>
+                    </div>
+                    <div className="p-2 bg-muted/30 rounded">
+                      <div className="text-sm font-medium break-words">{company.employees}</div>
+                      <div className="text-xs text-muted-foreground">Employees</div>
+                    </div>
+                    <div className="p-2 bg-muted/30 rounded">
+                      <div className="text-sm font-medium break-words">{company.revenue}</div>
+                      <div className="text-xs text-muted-foreground">Revenue</div>
+                    </div>
                   </div>
                 </div>
               </div>
