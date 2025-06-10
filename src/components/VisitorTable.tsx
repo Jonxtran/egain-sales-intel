@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -34,6 +35,25 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // B2C companies with their headquarters locations
+  const b2cCompanies = [
+    { name: 'Amazon', location: 'Seattle, WA', domain: 'amazon.com' },
+    { name: 'Apple', location: 'Cupertino, CA', domain: 'apple.com' },
+    { name: 'Netflix', location: 'Los Gatos, CA', domain: 'netflix.com' },
+    { name: 'Disney', location: 'Burbank, CA', domain: 'disney.com' },
+    { name: 'Nike', location: 'Beaverton, OR', domain: 'nike.com' },
+    { name: 'Target', location: 'Minneapolis, MN', domain: 'target.com' },
+    { name: 'Walmart', location: 'Bentonville, AR', domain: 'walmart.com' },
+    { name: 'Starbucks', location: 'Seattle, WA', domain: 'starbucks.com' },
+    { name: 'Tesla', location: 'Austin, TX', domain: 'tesla.com' },
+    { name: 'Uber', location: 'San Francisco, CA', domain: 'uber.com' },
+    { name: 'Airbnb', location: 'San Francisco, CA', domain: 'airbnb.com' },
+    { name: 'McDonald\'s', location: 'Chicago, IL', domain: 'mcdonalds.com' },
+    { name: 'Coca-Cola', location: 'Atlanta, GA', domain: 'coca-cola.com' },
+    { name: 'PepsiCo', location: 'Purchase, NY', domain: 'pepsico.com' },
+    { name: 'Best Buy', location: 'Richfield, MN', domain: 'bestbuy.com' }
+  ];
+
   const loadVisitors = async () => {
     setLoading(true);
     try {
@@ -51,20 +71,9 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
       } else {
         // Transform Supabase data to visitor format
         const processedVisitors: Visitor[] = supabaseData.map((data, index) => {
-          const domain = data.domain || 'www.egain.com';
-          // Extract company name from domain (e.g., www.egain.com -> eGain)
-          const getCompanyFromDomain = (domain: string): string => {
-            if (domain.includes('egain')) return 'eGain';
-            if (domain.includes('microsoft')) return 'Microsoft';
-            if (domain.includes('google')) return 'Google';
-            if (domain.includes('apple')) return 'Apple';
-            if (domain.includes('amazon')) return 'Amazon';
-            // Default to capitalizing the main part of the domain
-            const mainPart = domain.replace(/^www\./, '').split('.')[0];
-            return mainPart.charAt(0).toUpperCase() + mainPart.slice(1);
-          };
+          // Randomly select a B2C company
+          const randomCompany = b2cCompanies[Math.floor(Math.random() * b2cCompanies.length)];
           
-          const company = getCompanyFromDomain(domain);
           const pages = Math.floor(Math.random() * 15) + 1;
           const durationSeconds = Math.floor(Math.random() * 600) + 60;
           const durationMinutes = Math.floor(durationSeconds / 60);
@@ -74,12 +83,12 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
           return {
             id: `visitor-${data.visitor_ip}-${data.date_time_utc}-${index}`,
             ip: data.visitor_ip,
-            domain,
-            company,
+            domain: randomCompany.domain,
+            company: randomCompany.name,
             pages,
             duration: `${durationMinutes}m ${durationSecs}s`,
             lastSeen: new Date(data.date_time_utc).toLocaleString(),
-            location: 'Unknown Location',
+            location: randomCompany.location,
             engagement,
             technology: data.user_agent?.includes('Chrome') ? 'Chrome' : 'Other',
             intent: ['Knowledge Management', 'Customer Service'],
@@ -167,7 +176,7 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Domain</TableHead>
+                <TableHead>Company</TableHead>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Engagement</TableHead>
