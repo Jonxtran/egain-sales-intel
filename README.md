@@ -21,7 +21,7 @@ This platform addresses a critical challenge for B2B sales teams: **identifying 
 
 ## 🚀 Live Demo
 
-**Live Application**: [https://96c52881-d170-4b2b-8951-fd6bc0c72652.lovableproject.com](https://96c52881-d170-4b2b-8951-fd6bc0c72652.lovableproject.com)
+**Live Application**: https://www.jonathanxtran.com 
 
 ## ✨ Core Features
 
@@ -189,8 +189,6 @@ This project demonstrates modern React development practices and would benefit f
 - Extended test coverage
 
 ## 📄 License
-
-This project is built using Lovable's platform and showcases capabilities for B2B sales intelligence solutions.
 
 ---
 
