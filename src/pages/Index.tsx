@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Search, Filter, TrendingUp, Users, Eye, Clock, Building2, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,10 +43,7 @@ const Index = () => {
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               Live Data
             </Badge>
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              Advanced Filters
-            </Button>
+            <SearchFilters />
           </div>
         </div>
 
