@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, MapPin, Clock, TrendingUp, RefreshCw } from 'lucide-react';
+import { Eye, MapPin, Clock, TrendingUp, RefreshCw, Flag, Tag, MoreHorizontal, Star, Building } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import VisitorDetails from './VisitorDetails';
 import { fetchVisitors, VisitorData } from '@/utils/supabaseData';
 import { calculateEngagement } from '@/utils/excelParser';
@@ -24,6 +25,8 @@ interface Visitor {
   technology: string;
   intent: string[];
   rawData?: VisitorData;
+  isFlagged?: boolean;
+  industry?: string;
 }
 
 interface VisitorTableProps {
@@ -37,21 +40,21 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
 
   // B2C companies with their headquarters locations
   const b2cCompanies = [
-    { name: 'Amazon', location: 'Seattle, WA', domain: 'amazon.com' },
-    { name: 'Apple', location: 'Cupertino, CA', domain: 'apple.com' },
-    { name: 'Netflix', location: 'Los Gatos, CA', domain: 'netflix.com' },
-    { name: 'Disney', location: 'Burbank, CA', domain: 'disney.com' },
-    { name: 'Nike', location: 'Beaverton, OR', domain: 'nike.com' },
-    { name: 'Target', location: 'Minneapolis, MN', domain: 'target.com' },
-    { name: 'Walmart', location: 'Bentonville, AR', domain: 'walmart.com' },
-    { name: 'Starbucks', location: 'Seattle, WA', domain: 'starbucks.com' },
-    { name: 'Tesla', location: 'Austin, TX', domain: 'tesla.com' },
-    { name: 'Uber', location: 'San Francisco, CA', domain: 'uber.com' },
-    { name: 'Airbnb', location: 'San Francisco, CA', domain: 'airbnb.com' },
-    { name: 'McDonald\'s', location: 'Chicago, IL', domain: 'mcdonalds.com' },
-    { name: 'Coca-Cola', location: 'Atlanta, GA', domain: 'coca-cola.com' },
-    { name: 'PepsiCo', location: 'Purchase, NY', domain: 'pepsico.com' },
-    { name: 'Best Buy', location: 'Richfield, MN', domain: 'bestbuy.com' }
+    { name: 'Amazon', location: 'Seattle, WA', domain: 'amazon.com', industry: 'E-commerce' },
+    { name: 'Apple', location: 'Cupertino, CA', domain: 'apple.com', industry: 'Technology' },
+    { name: 'Netflix', location: 'Los Gatos, CA', domain: 'netflix.com', industry: 'Entertainment' },
+    { name: 'Disney', location: 'Burbank, CA', domain: 'disney.com', industry: 'Entertainment' },
+    { name: 'Nike', location: 'Beaverton, OR', domain: 'nike.com', industry: 'Retail' },
+    { name: 'Target', location: 'Minneapolis, MN', domain: 'target.com', industry: 'Retail' },
+    { name: 'Walmart', location: 'Bentonville, AR', domain: 'walmart.com', industry: 'Retail' },
+    { name: 'Starbucks', location: 'Seattle, WA', domain: 'starbucks.com', industry: 'Food & Beverage' },
+    { name: 'Tesla', location: 'Austin, TX', domain: 'tesla.com', industry: 'Automotive' },
+    { name: 'Uber', location: 'San Francisco, CA', domain: 'uber.com', industry: 'Transportation' },
+    { name: 'Airbnb', location: 'San Francisco, CA', domain: 'airbnb.com', industry: 'Travel' },
+    { name: 'McDonald\'s', location: 'Chicago, IL', domain: 'mcdonalds.com', industry: 'Food & Beverage' },
+    { name: 'Coca-Cola', location: 'Atlanta, GA', domain: 'coca-cola.com', industry: 'Food & Beverage' },
+    { name: 'PepsiCo', location: 'Purchase, NY', domain: 'pepsico.com', industry: 'Food & Beverage' },
+    { name: 'Best Buy', location: 'Richfield, MN', domain: 'bestbuy.com', industry: 'Retail' }
   ];
 
   const loadVisitors = async () => {
@@ -92,6 +95,8 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
             engagement,
             technology: data.user_agent?.includes('Chrome') ? 'Chrome' : 'Other',
             intent: ['Knowledge Management', 'Customer Service'],
+            industry: randomCompany.industry,
+            isFlagged: Math.random() > 0.8, // Random flagged status
             rawData: data
           };
         });
@@ -113,6 +118,36 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
   useEffect(() => {
     loadVisitors();
   }, []);
+
+  const handleFlagVisitor = (visitorId: string) => {
+    setVisitors(prev => prev.map(visitor => 
+      visitor.id === visitorId 
+        ? { ...visitor, isFlagged: !visitor.isFlagged }
+        : visitor
+    ));
+    
+    const visitor = visitors.find(v => v.id === visitorId);
+    toast({
+      title: visitor?.isFlagged ? "Visitor Unflagged" : "Visitor Flagged",
+      description: visitor?.isFlagged 
+        ? `${visitor.company} removed from watch list`
+        : `${visitor?.company} added to watch list`,
+    });
+  };
+
+  const handleIndustryTag = (visitorId: string) => {
+    toast({
+      title: "Industry Analysis",
+      description: "LinkedIn/Crunchbase integration coming soon...",
+    });
+  };
+
+  const handleContactInfo = (visitorId: string) => {
+    toast({
+      title: "Contact Discovery",
+      description: "Finding contact information...",
+    });
+  };
 
   const filteredVisitors = visitors.filter(visitor =>
     visitor.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -183,64 +218,119 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
                 <TableHead>Pages Viewed</TableHead>
                 <TableHead>Session Time</TableHead>
                 <TableHead>Last Seen</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredVisitors.map((visitor) => (
-                <TableRow key={visitor.id} className="hover:bg-muted/50">
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{visitor.company}</span>
-                      <span className="text-sm text-muted-foreground">{visitor.domain}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-sm">{visitor.ip}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-sm">{visitor.location}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getEngagementColor(visitor.engagement)}>
-                      {visitor.engagement}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                      <span>{visitor.pages}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-muted-foreground" />
-                      <span>{visitor.duration}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {visitor.lastSeen}
-                  </TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-3 h-3 mr-1" />
-                          View Details
+                <ContextMenuTrigger key={visitor.id} asChild>
+                  <TableRow className="hover:bg-muted/50">
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{visitor.company}</span>
+                          {visitor.isFlagged && (
+                            <Flag className="w-3 h-3 text-red-500 fill-red-500" />
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">{visitor.domain}</span>
+                        {visitor.industry && (
+                          <Badge variant="outline" className="w-fit mt-1 text-xs">
+                            {visitor.industry}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">{visitor.ip}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm">{visitor.location}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={getEngagementColor(visitor.engagement)}>
+                        {visitor.engagement}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3 text-muted-foreground" />
+                        <span>{visitor.pages}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <span>{visitor.duration}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {visitor.lastSeen}
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-3 h-3 mr-1" />
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl">
+                          <DialogHeader>
+                            <DialogTitle>Visitor Intelligence - {visitor.company}</DialogTitle>
+                          </DialogHeader>
+                          <VisitorDetails visitor={visitor} />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleFlagVisitor(visitor.id)}
+                          className={visitor.isFlagged ? "text-red-600" : ""}
+                        >
+                          <Flag className={`w-3 h-3 ${visitor.isFlagged ? 'fill-current' : ''}`} />
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>Visitor Intelligence - {visitor.company}</DialogTitle>
-                        </DialogHeader>
-                        <VisitorDetails visitor={visitor} />
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleIndustryTag(visitor.id)}
+                        >
+                          <Building className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleContactInfo(visitor.id)}
+                        >
+                          <Star className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <ContextMenu>
+                        <ContextMenuContent>
+                          <ContextMenuItem onClick={() => handleFlagVisitor(visitor.id)}>
+                            <Flag className="w-4 h-4 mr-2" />
+                            {visitor.isFlagged ? 'Remove from Watch List' : 'Add to Watch List'}
+                          </ContextMenuItem>
+                          <ContextMenuItem onClick={() => handleIndustryTag(visitor.id)}>
+                            <Tag className="w-4 h-4 mr-2" />
+                            Analyze with LinkedIn/Crunchbase
+                          </ContextMenuItem>
+                          <ContextMenuItem onClick={() => handleContactInfo(visitor.id)}>
+                            <Star className="w-4 h-4 mr-2" />
+                            Find Contact Information
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
+                    </TableCell>
+                  </TableRow>
+                </ContextMenuTrigger>
               ))}
             </TableBody>
           </Table>
