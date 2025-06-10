@@ -1,7 +1,6 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { parseExcelFile, getCompanyFromIP, calculateEngagement } from '../../../src/utils/excelParser.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +8,25 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+// Move utility functions directly into the edge function
+const getCompanyFromIP = (ip: string): string => {
+  const companyMap: { [key: string]: string } = {
+    '69.191.211.207': 'Microsoft Corporation',
+    '180.179.180.41': 'Salesforce Inc',
+    '3.141.5.27': 'Amazon Web Services',
+    '80.246.241.14': 'Deutsche Bank AG',
+    '162.249.164.251': 'JPMorgan Chase',
+  };
+  
+  return companyMap[ip] || 'Unknown Company';
+};
+
+const calculateEngagement = (pages: number, duration: number): 'High' | 'Medium' | 'Low' => {
+  if (pages >= 10 || duration >= 300) return 'High';
+  if (pages >= 5 || duration >= 120) return 'Medium';
+  return 'Low';
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -19,12 +37,9 @@ serve(async (req) => {
   try {
     const { message, conversationHistory = [] } = await req.json();
 
-    // Fetch visitor data from the Excel file
-    console.log('Loading visitor data from Excel file...');
+    // Load sample visitor data that represents what would come from the Excel file
+    console.log('Loading visitor data...');
     
-    // Since we can't directly import the parseExcelFile function in the edge function,
-    // we'll simulate loading the data or fetch it from a different source
-    // For now, let's create sample visitor data that represents what would come from the Excel
     const sampleVisitorData = [
       {
         id: '1',
