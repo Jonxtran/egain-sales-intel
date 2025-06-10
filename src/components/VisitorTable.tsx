@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -224,113 +223,113 @@ const VisitorTable = ({ searchTerm }: VisitorTableProps) => {
             </TableHeader>
             <TableBody>
               {filteredVisitors.map((visitor) => (
-                <ContextMenuTrigger key={visitor.id} asChild>
-                  <TableRow className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{visitor.company}</span>
-                          {visitor.isFlagged && (
-                            <Flag className="w-3 h-3 text-red-500 fill-red-500" />
+                <ContextMenu key={visitor.id}>
+                  <ContextMenuTrigger asChild>
+                    <TableRow className="hover:bg-muted/50">
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{visitor.company}</span>
+                            {visitor.isFlagged && (
+                              <Flag className="w-3 h-3 text-red-500 fill-red-500" />
+                            )}
+                          </div>
+                          <span className="text-sm text-muted-foreground">{visitor.domain}</span>
+                          {visitor.industry && (
+                            <Badge variant="outline" className="w-fit mt-1 text-xs">
+                              {visitor.industry}
+                            </Badge>
                           )}
                         </div>
-                        <span className="text-sm text-muted-foreground">{visitor.domain}</span>
-                        {visitor.industry && (
-                          <Badge variant="outline" className="w-fit mt-1 text-xs">
-                            {visitor.industry}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{visitor.ip}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-sm">{visitor.location}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getEngagementColor(visitor.engagement)}>
-                        {visitor.engagement}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                        <span>{visitor.pages}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span>{visitor.duration}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {visitor.lastSeen}
-                    </TableCell>
-                    <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-3 h-3 mr-1" />
-                            View Details
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">{visitor.ip}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-sm">{visitor.location}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getEngagementColor(visitor.engagement)}>
+                          {visitor.engagement}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3 text-muted-foreground" />
+                          <span>{visitor.pages}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-muted-foreground" />
+                          <span>{visitor.duration}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {visitor.lastSeen}
+                      </TableCell>
+                      <TableCell>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-3 h-3 mr-1" />
+                              View Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                              <DialogTitle>Visitor Intelligence - {visitor.company}</DialogTitle>
+                            </DialogHeader>
+                            <VisitorDetails visitor={visitor} />
+                          </DialogContent>
+                        </Dialog>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleFlagVisitor(visitor.id)}
+                            className={visitor.isFlagged ? "text-red-600" : ""}
+                          >
+                            <Flag className={`w-3 h-3 ${visitor.isFlagged ? 'fill-current' : ''}`} />
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>Visitor Intelligence - {visitor.company}</DialogTitle>
-                          </DialogHeader>
-                          <VisitorDetails visitor={visitor} />
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleFlagVisitor(visitor.id)}
-                          className={visitor.isFlagged ? "text-red-600" : ""}
-                        >
-                          <Flag className={`w-3 h-3 ${visitor.isFlagged ? 'fill-current' : ''}`} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleIndustryTag(visitor.id)}
-                        >
-                          <Building className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleContactInfo(visitor.id)}
-                        >
-                          <Star className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <ContextMenu>
-                        <ContextMenuContent>
-                          <ContextMenuItem onClick={() => handleFlagVisitor(visitor.id)}>
-                            <Flag className="w-4 h-4 mr-2" />
-                            {visitor.isFlagged ? 'Remove from Watch List' : 'Add to Watch List'}
-                          </ContextMenuItem>
-                          <ContextMenuItem onClick={() => handleIndustryTag(visitor.id)}>
-                            <Tag className="w-4 h-4 mr-2" />
-                            Analyze with LinkedIn/Crunchbase
-                          </ContextMenuItem>
-                          <ContextMenuItem onClick={() => handleContactInfo(visitor.id)}>
-                            <Star className="w-4 h-4 mr-2" />
-                            Find Contact Information
-                          </ContextMenuItem>
-                        </ContextMenuContent>
-                      </ContextMenu>
-                    </TableCell>
-                  </TableRow>
-                </ContextMenuTrigger>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleIndustryTag(visitor.id)}
+                          >
+                            <Building className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleContactInfo(visitor.id)}
+                          >
+                            <Star className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem onClick={() => handleFlagVisitor(visitor.id)}>
+                      <Flag className="w-4 h-4 mr-2" />
+                      {visitor.isFlagged ? 'Remove from Watch List' : 'Add to Watch List'}
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => handleIndustryTag(visitor.id)}>
+                      <Tag className="w-4 h-4 mr-2" />
+                      Analyze with LinkedIn/Crunchbase
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => handleContactInfo(visitor.id)}>
+                      <Star className="w-4 h-4 mr-2" />
+                      Find Contact Information
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
             </TableBody>
           </Table>
