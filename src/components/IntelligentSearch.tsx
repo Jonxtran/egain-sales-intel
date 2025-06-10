@@ -1,10 +1,11 @@
 
 import { useState } from 'react';
-import { Search, MessageCircle, Sparkles, Send, Loader2 } from 'lucide-react';
+import { Search, MessageCircle, Sparkles, Send, Loader2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,29 +14,55 @@ interface IntelligentSearchProps {
   searchTerm: string;
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
 const IntelligentSearch = ({ onSearch, searchTerm }: IntelligentSearchProps) => {
   const [chatMode, setChatMode] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [aiInsight, setAiInsight] = useState('');
+  const [conversation, setConversation] = useState<ChatMessage[]>([]);
   const { toast } = useToast();
 
   const handleChatSubmit = async () => {
     if (!chatMessage.trim()) return;
 
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: chatMessage,
+      timestamp: new Date()
+    };
+
+    setConversation(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setChatMessage('');
+
     try {
+      // Prepare conversation history for the API
+      const conversationHistory = conversation.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
       const { data, error } = await supabase.functions.invoke('chat-insights', {
         body: { 
           message: chatMessage,
-          context: 'visitor_analytics'
+          conversationHistory: conversationHistory
         }
       });
 
       if (error) throw error;
 
-      setAiInsight(data.insight);
-      setChatMessage('');
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: data.insight,
+        timestamp: new Date()
+      };
+
+      setConversation(prev => [...prev, assistantMessage]);
       
       toast({
         title: "AI Insight Generated",
@@ -51,6 +78,10 @@ const IntelligentSearch = ({ onSearch, searchTerm }: IntelligentSearchProps) => 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const clearConversation = () => {
+    setConversation([]);
   };
 
   const suggestedQuestions = [
@@ -109,7 +140,6 @@ const IntelligentSearch = ({ onSearch, searchTerm }: IntelligentSearchProps) => 
           onClick={() => {
             setChatMode(!chatMode);
             if (chatMode) {
-              setAiInsight('');
               setChatMessage('');
             }
           }}
@@ -120,52 +150,87 @@ const IntelligentSearch = ({ onSearch, searchTerm }: IntelligentSearchProps) => 
         </Button>
       </div>
 
-      {/* Suggested Questions */}
-      {chatMode && !aiInsight && (
+      {/* Chat Interface */}
+      {chatMode && (
         <Card>
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Suggested questions:</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {suggestedQuestions.map((question, idx) => (
-                  <Badge
-                    key={idx}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={() => setChatMessage(question)}
-                  >
-                    {question}
-                  </Badge>
-                ))}
-              </div>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-primary" />
+                AI Conversation
+              </CardTitle>
+              {conversation.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearConversation}
+                  className="gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Clear
+                </Button>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Conversation History */}
+            {conversation.length > 0 && (
+              <ScrollArea className="h-64 w-full rounded-md border p-4">
+                <div className="space-y-4">
+                  {conversation.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          message.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm">ChatGPT is analyzing...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
 
-      {/* AI Insight Response */}
-      {aiInsight && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">AI Insight</span>
+            {/* Suggested Questions */}
+            {conversation.length === 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Suggested questions:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedQuestions.map((question, idx) => (
+                    <Badge
+                      key={idx}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                      onClick={() => setChatMessage(question)}
+                    >
+                      {question}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              <div className="prose prose-sm max-w-none">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{aiInsight}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAiInsight('')}
-              >
-                Ask Another Question
-              </Button>
-            </div>
+            )}
           </CardContent>
         </Card>
       )}
