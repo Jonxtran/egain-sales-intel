@@ -94,63 +94,7 @@ const IntelligentSearch = ({ onSearch, searchTerm }: IntelligentSearchProps) => 
 
   return (
     <div className="space-y-4">
-      {/* Search/Chat Mode Toggle */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          {!chatMode ? (
-            <>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search by company, IP, page type, or visitor behavior..."
-                value={searchTerm}
-                onChange={(e) => onSearch(e.target.value)}
-                className="pl-10 h-11"
-              />
-            </>
-          ) : (
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Ask ChatGPT about your visitor data..."
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleChatSubmit()}
-                  className="pl-10 h-11"
-                />
-              </div>
-              <Button 
-                onClick={handleChatSubmit} 
-                disabled={isLoading || !chatMessage.trim()}
-                size="sm"
-                className="h-11"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-          )}
-        </div>
-        
-        <Button
-          variant={chatMode ? "default" : "outline"}
-          onClick={() => {
-            setChatMode(!chatMode);
-            if (chatMode) {
-              setChatMessage('');
-            }
-          }}
-          className="h-11 gap-2"
-        >
-          <Sparkles className="w-4 h-4" />
-          {chatMode ? "Exit AI Mode" : "AI Insights"}
-        </Button>
-      </div>
-
-      {/* Chat Interface */}
+      {/* Chat Interface - Now Above Search Box */}
       {chatMode && (
         <Card>
           <CardHeader className="pb-3">
@@ -234,6 +178,62 @@ const IntelligentSearch = ({ onSearch, searchTerm }: IntelligentSearchProps) => 
           </CardContent>
         </Card>
       )}
+
+      {/* Search/Chat Mode Toggle - Now Below Conversation */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          {!chatMode ? (
+            <>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search by company, IP, page type, or visitor behavior..."
+                value={searchTerm}
+                onChange={(e) => onSearch(e.target.value)}
+                className="pl-10 h-11"
+              />
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Ask ChatGPT about your visitor data..."
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleChatSubmit()}
+                  className="pl-10 h-11"
+                />
+              </div>
+              <Button 
+                onClick={handleChatSubmit} 
+                disabled={isLoading || !chatMessage.trim()}
+                size="sm"
+                className="h-11"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        <Button
+          variant={chatMode ? "default" : "outline"}
+          onClick={() => {
+            setChatMode(!chatMode);
+            if (chatMode) {
+              setChatMessage('');
+            }
+          }}
+          className="h-11 gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          {chatMode ? "Exit AI Mode" : "AI Insights"}
+        </Button>
+      </div>
     </div>
   );
 };
